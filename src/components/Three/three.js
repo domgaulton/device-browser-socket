@@ -11,12 +11,23 @@ class Three extends Component {
     document.body.appendChild( renderer.domElement );
     // var geometry = new THREE.BoxGeometry( 1, 1, 1 );
     // var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-    var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    for ( var i = 0; i < geometry.faces.length; i ++ ) {
-        geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
-    }
-    var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: true } );
-    var cube = new THREE.Mesh( geometry, material );
+    // var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+    // for ( var i = 0; i < geometry.faces.length; i ++ ) {
+    //     geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
+    // }
+    // var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: true } );
+    // var cube = new THREE.Mesh( geometry, material );
+    var geometry = new THREE.CubeGeometry(2,2,2);
+    var cubeMaterials = [ 
+        new THREE.MeshBasicMaterial({color:0xff0000, transparent:true, opacity:0.8, side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({color:0x00ff00, transparent:true, opacity:0.8, side: THREE.DoubleSide}), 
+        new THREE.MeshBasicMaterial({color:0x0000ff, transparent:true, opacity:0.8, side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({color:0xffff00, transparent:true, opacity:0.8, side: THREE.DoubleSide}), 
+        new THREE.MeshBasicMaterial({color:0xff00ff, transparent:true, opacity:0.8, side: THREE.DoubleSide}), 
+        new THREE.MeshBasicMaterial({color:0x00ffff, transparent:true, opacity:0.8, side: THREE.DoubleSide}), 
+    ]; 
+    var cubeMaterial = new THREE.MeshFaceMaterial(cubeMaterials); 
+    var cube = new THREE.Mesh(geometry, cubeMaterial);
     scene.add( cube );
     camera.position.z = 5;
     // camera.position.x = this.props.a;
@@ -28,9 +39,9 @@ class Three extends Component {
       // cube.rotation.y += 0.01;
       // cube.rotation.z += 0.01;
 
-      cube.rotation.x = (this.props.x / 360) * 30;
-      cube.rotation.y = (this.props.y / 360) * 30;
-      cube.rotation.z = (this.props.z / 360) * 30;
+      cube.rotation.x = (this.props.x / 20);
+      cube.rotation.y = (this.props.y / 20);
+      cube.rotation.z = (this.props.z / 20);
 
     // camera.position.x = this.props.a;
     // camera.position.y = this.props.b;

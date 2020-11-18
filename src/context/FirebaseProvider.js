@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { firestore } from "../firebase/firebase";
-// import { withRouter } from "react-router";
 
 const Context = React.createContext();
 export const FirebaseConsumer = Context;
@@ -13,12 +12,8 @@ function FirebaseProvider(props) {
     firestore.collection(pageCollection).doc(pageId).set({
       fireStore: {
         pageId,
+        deviceReady: false,
         pageActive: false,
-        orientation: {
-          alpha: 0,
-          beta: 0,
-          gamma: 0,
-        },
       }, 
     })
     .then(() => {
@@ -29,10 +24,7 @@ function FirebaseProvider(props) {
         const update = response.data().fireStore;
         setPageState(prevState => ({
           ...prevState,
-          fireStore: {
-            ...pageState.fireStore,
-            ...update,
-          }
+          fireStore: update,
         }))
       });
     })
@@ -46,38 +38,11 @@ function FirebaseProvider(props) {
     const collection = firestore.collection(pageCollection).doc(pageId)
     collection.update({
       fireStore: {
-        ...pageState.fireStore,
         pageId,
+        deviceReady: false,
         pageActive: true,
-      }
-    })
-    // .then(() => {
-    //   firestore.collection(pageCollection).doc(pageId)
-    //   .onSnapshot({
-    //     includeMetadataChanges: true
-    //   },response => {
-    //     const update = response.data().fireStore;
-    //     setPageState(prevState => ({
-    //       ...prevState,
-    //       fireStore: update,
-    //     }))
-    //   });
-    // })
-  }
-
-  const handleSetOrientation = (pageId, orientation) => {
-    const {alpha, beta, gamma} = orientation;
-    console.log(pageId, alpha, beta, gamma);
-    const timeNow = Date.now().toString();
-    const collection = firestore.collection(pageCollection).doc(pageId)
-    collection.update({
-      fireStore: {
-        ...pageState.fireStore,
-        pageId,
-        pageActive: true,
-        lastUpdate: timeNow,
-        orientation,
-      }
+        orientation: {},
+      }, 
     })
     .then(() => {
       firestore.collection(pageCollection).doc(pageId)
@@ -93,16 +58,20 @@ function FirebaseProvider(props) {
     })
   }
 
-  const [pageState, setPageState] = useState({
-    fireStore: {
-      pageId: '',
-      pageActive: false,
-      orientation: {
-        alpha: 0,
-        beta: 0,
-        gamma: 0,
+  const handleSetOrientation = (pageId, orientation) => {
+    const collection = firestore.collection(pageCollection).doc(pageId)
+    collection.update({
+      fireStore: {
+        pageId,
+        pageActive: true,
+        deviceReady: true,
+        orientation,
       },
-    },
+    })
+  }
+
+  const [pageState, setPageState] = useState({
+    fireStore: {},
     createPage: (pageId) => handleCreateRoom(pageId),
     setPageActive: (pageId) => handleSetPageActive(pageId),
     setOrientation: (pageId, orientation) => handleSetOrientation(pageId, orientation),

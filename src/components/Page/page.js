@@ -3,7 +3,9 @@ import { FirebaseConsumer } from "../../context/FirebaseProvider";
 import Three from '../Three/three'
 
 function Page(props) {
-  const [deviceDetection, setDeviceDetection] = useState(false);
+  const timeNow = Date.now().toString();
+  const [deviceMotionDetection, setDeviceMotionDetection] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(timeNow);
   const [orientation, setLocalOrientation] = useState({
     alpha: 0,
     beta: 0,
@@ -12,13 +14,30 @@ function Page(props) {
   const pageId = props.match.params.pageId;
   const { fireStore, setPageActive, setOrientation } = useContext(FirebaseConsumer);
 
-  const acceptDevice = () => {
+  // Page Load
+  useEffect(() => {
+    if ( !fireStore.pageActive ) {
+      setPageActive(pageId);
+    }
+  }, [fireStore.pageActive, setPageActive, pageId]);
+
+
+  useEffect(() => {
+    if ( deviceMotionDetection ) {
+      if ( timeNow - lastUpdate > 1000 ) {
+        setOrientation(pageId, orientation);
+        setLastUpdate(timeNow);
+      }
+    }
+  }, [deviceMotionDetection, setOrientation, pageId, orientation, setLastUpdate, timeNow]);
+
+  const acceptDeviceMotion = () => {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission()
       .then(response => {
         if (response === 'granted') {
+          setDeviceMotionDetection(true);
           if (window.DeviceOrientationEvent) {
-            setDeviceDetection(true);
             window.addEventListener('deviceorientation', handleOrientation, false);
           } else  { 
             alert('no device');
@@ -28,7 +47,7 @@ function Page(props) {
       .catch(console.error)
     } else {
       if (window.DeviceOrientationEvent) {
-        setDeviceDetection(true);
+        setDeviceMotionDetection(true);
         window.addEventListener('deviceorientation', handleOrientation, false);
       } else  { 
         alert('no device');
@@ -36,46 +55,29 @@ function Page(props) {
     }
   };
 
-  useEffect(() => {
-    setPageActive(pageId);
-  }, [setPageActive, pageId]);
-
-  useEffect(() => {
-    if ( !fireStore.lastUpdate ) {
-      setOrientation(pageId, orientation)
-    } else {
-      const interval = setInterval(() => {
-        setOrientation(pageId, orientation)
-      }, 1500);
-
-      return () => {
-        clearInterval(interval);
-      };
-    }
-  }, [fireStore.lastUpdate, setOrientation]);
-
   const handleOrientation = event => {
     let { alpha, beta, gamma } = event;
-    alpha = Math.round(alpha)
-    beta = Math.round(beta)
-    gamma = Math.round(gamma)
+    alpha = (Math.round(alpha) + 90)
+    beta = (Math.round(beta) + 90)
+    gamma = (Math.round(gamma) + 90)
     setLocalOrientation({alpha, beta, gamma})
   }
 
-  return (
+  return deviceMotionDetection ? (
     <div>
-      <div style={{position: 'absolute', color: 'white'}}>
-        <button disabled={deviceDetection} onClick={acceptDevice}>{!deviceDetection ? 'Allow Motion Detection' : 'Motion Accepted'}</button>
-        <h1>{pageId}</h1>
-        <p>{fireStore.orientation.alpha}</p>
-        <p>{fireStore.orientation.beta}</p>
-        <p>{fireStore.orientation.gamma}</p>
-        <p>Local</p>
+      <div style={{position: 'absolute', color: 'white', marginLeft: '1em'}}>
+        <p><strong>Device orientation</strong></p>
         <p>{`alpha: ${orientation.alpha}`}</p>
         <p>{`beta: ${orientation.beta}`}</p>
         <p>{`gamma: ${orientation.gamma}`}</p>
       </div>
       <Three x={orientation.beta} y={orientation.gamma} z={orientation.alpha} />
+    </div>
+  ) : (
+    <div style={{textAlign: 'center'}}>
+      <h1>Instructions</h1>
+      <p>To use this you must allow motion detection on your phone</p>
+      <button style={{fontSize: '24px' }} onClick={acceptDeviceMotion}>{!deviceMotionDetection ? 'Allow Motion Detection' : 'Motion Accepted'}</button>
     </div>
   );
 }
